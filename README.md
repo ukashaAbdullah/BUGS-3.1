@@ -30,7 +30,7 @@ A real-time Extract, Transform, Load (ETL) pipeline and interactive geospatial t
 | `models.py` | **Data Validation** | Defines Pydantic v2 schemas (`Position`, `ISSResponse`, `Astronaut`, `AstrosResponse`) with `mode="before"` type coercion for coordinate strings. |
 | `index.html` | **Custom UI Component** | Provides a styled HTML/CSS hero banner rendered via `streamlit.components.v1.html` displaying project metadata and technology tags. |
 | `requirements.txt` | **Dependency Manifest** | Pins core runtime libraries (`requests`, `pydantic`, `pandas`, `plotly`, `streamlit`). |
-| `.devcontainer/devcontainer.json` | **Cloud Environment** | Configures a Python 3.11 Bookworm container for GitHub Codespaces with automated dependency installation and port `8501` forwarding. |
+| `.devcontainer/devcontainer.json` | **Cloud Environment** | Configures a Python 3.11 Bookworm container for  GitHub Codespaces with automated dependency installation and port `8501` forwarding. |
 
 ---
 
@@ -47,7 +47,7 @@ A real-time Extract, Transform, Load (ETL) pipeline and interactive geospatial t
 
 ## 📐 Orbital Velocity Methodology
 
-To estimate instantaneous orbital velocity between consecutive coordinate fixes $(\phi_1, \lambda_1)$ and $(\phi_2, \lambda_2)$, `etl.py` applies the **Haversine formula** using an effective orbital radius that combines Earth's mean radius ($6,371\text{ km}$) with the ISS nominal orbital altitude ($\approx 408\text{ km}$):
+To estimate instantaneous orbital velocity between the consecutive coordinate fixes $(\phi_1, \lambda_1)$ and $(\phi_2, \lambda_2)$, `etl.py` applies the **Haversine formula** using an effective orbital radius that combines Earth's mean radius ($6,371\text{ km}$) with the ISS nominal orbital altitude ($\approx 408\text{ km}$):
 
 $$R_{\text{orbit}} = 6,371.0 + 408.0 = 6,779.0\text{ km}$$
 
