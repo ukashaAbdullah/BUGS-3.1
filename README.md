@@ -70,3 +70,31 @@ BUGS-3.1/
 ├── index.html              # Styled HTML/CSS header component
 ├── models.py               # Pydantic v2 data validation schemas
 └── requirements.txt        # Python package dependencies
+## Local Setup
+
+### Requirements
+- Python 3.10 or newer
+- pip
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ukashaAbdullah/BUGS-3.1.git
+cd BUGS-3.1
+
+### Install dependencies
+
+```bash
+pip install -r requirements.txt
+
+### Run the application
+
+```bash
+streamlit run app.py.
+'''
+
+
+
+
