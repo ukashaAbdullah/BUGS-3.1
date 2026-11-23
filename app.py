@@ -1,3 +1,4 @@
+import time
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -11,7 +12,7 @@ st.markdown(
       [data-testid="stMetric"] {
         background-color: #f8fafc;
         border: 1px solid #e2e8f0;
-        padding: 14px 18px;
+        padding: 12px 16px;
         border-radius: 12px;
       }
     </style>
@@ -22,28 +23,41 @@ st.markdown(
 with open("index.html", "r", encoding="utf-8") as f:
     st.components.v1.html(f.read(), height=175)
 
-col_btn, col_info = st.columns([1, 3])
-with col_btn:
-    fetch_clicked = st.button("🔄 Fetch Live Data", type="primary", use_container_width=True)
+c_btn, c_toggle, c_status = st.columns([1.4, 1.4, 3.2])
+
+with c_btn:
+    fetch_clicked = st.button("🔄 Fetch Now", type="primary", use_container_width=True)
+
+with c_toggle:
+    live_track = st.toggle("⚡ Auto-Track (5s)", value=False)
 
 if fetch_clicked:
-    with st.spinner("Fetching live ISS telemetry & crew manifest..."):
-        try:
-            fetch_and_store(samples=2, delay_sec=2)
-            st.success("Live data validated and stored in SQLite.")
-        except Exception as e:
-            st.error(f"Error fetching data: {e}")
+    try:
+        fetch_and_store(include_crew=True)
+        with c_status:
+            st.success("Updated live ISS & crew data!")
+    except Exception as e:
+        with c_status:
+            st.error(f"Error: {e}")
+
+elif live_track:
+    try:
+        fetch_and_store(include_crew=False)
+        with c_status:
+            st.caption("Live tracking active — updating every 5 seconds...")
+    except Exception as e:
+        with c_status:
+            st.warning(f"Temporary network hiccup: {e}")
 
 df, crew_df = get_eda_data()
 
 if df.empty:
-    with col_info:
-        st.info("Click **Fetch Live Data** to start tracking the ISS.")
+    st.info("Click **Fetch Now** or turn on **Auto-Track (5s)** to start.")
     st.stop()
 
 latest = df.iloc[-1]
 valid_speeds = df["speed_kmh"].dropna()
-latest_speed = f"{valid_speeds.iloc[-1]:,.1f} km/h" if not valid_speeds.empty else "Fetching..."
+latest_speed = f"{valid_speeds.iloc[-1]:,.1f} km/h" if not valid_speeds.empty else "Need 2+ points"
 crew_count = int(crew_df["total_in_space"].iloc[0]) if not crew_df.empty else 0
 
 m1, m2, m3, m4 = st.columns(4)
@@ -55,7 +69,6 @@ m4.metric("Humans in Space", crew_count)
 st.markdown("### 🌍 ISS Orbital Trajectory")
 fig_map = go.Figure()
 
-# Break line across +/-180 longitude so it doesn't draw a horizontal streak across the globe
 path_lats, path_lons = [], []
 for i in range(len(df)):
     if i > 0 and abs(df.loc[i, "lon"] - df.loc[i - 1, "lon"]) > 180:
@@ -70,7 +83,7 @@ fig_map.add_trace(
         lon=path_lons,
         mode="lines+markers",
         line=dict(width=2.5, color="#38bdf8"),
-        marker=dict(size=5, color="#7dd3fc"),
+        marker=dict(size=4, color="#7dd3fc"),
         name="Flight Path",
     )
 )
@@ -82,8 +95,8 @@ fig_map.add_trace(
         mode="markers+text",
         text=["ISS"],
         textposition="top center",
-        marker=dict(size=12, color="#ef4444"),
-        name="Current ISS",
+        marker=dict(size=13, color="#ef4444"),
+        name="Current ISS (Red Dot)",
     )
 )
 
@@ -98,7 +111,8 @@ fig_map.update_geos(
     bgcolor="#0f172a",
 )
 fig_map.update_layout(
-    height=430,
+    height=420,
+    uirevision="iss-map-locked",
     margin=dict(l=0, r=0, t=10, b=0),
     paper_bgcolor="#0f172a",
     font=dict(color="#f8fafc"),
@@ -119,10 +133,10 @@ with left:
             markers=True,
             labels={"utc_time": "UTC Time", "speed_kmh": "Speed (km/h)"},
         )
-        fig_spd.update_layout(height=300, margin=dict(l=10, r=10, t=15, b=10))
+        fig_spd.update_layout(height=290, margin=dict(l=10, r=10, t=15, b=10))
         st.plotly_chart(fig_spd, use_container_width=True)
     else:
-        st.info("Click **Fetch Live Data** again to record another point for speed trend.")
+        st.info("Collect at least 2 readings to see speed over time.")
 
 with right:
     st.markdown("### 👨‍🚀 Active Crew Manifest")
@@ -131,7 +145,11 @@ with right:
             crew_df[["name", "craft"]].rename(columns={"name": "Astronaut", "craft": "Spacecraft"}),
             use_container_width=True,
             hide_index=True,
-            height=300,
+            height=290,
         )
     else:
         st.info("No crew data available yet.")
+
+if live_track:
+    time.sleep(5)
+    st.rerun()
